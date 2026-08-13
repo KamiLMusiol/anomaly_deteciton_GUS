@@ -1,0 +1,26 @@
+transaction_id,customer_name,amount,age,hour
+1,Jan Kowalski,120.50,34,14
+2,Anna Nowak,89.90,29,10
+3,Piotr Wisniewski,150.00,45,16
+4,Katarzyna Wojcik,95.20,38,11
+5,Marek Kaminski,110.75,52,15
+6,Ewa Lewandowska,130.00,27,13
+7,Tomasz Zielinski,99.99,41,9
+8,Magda Szymanska,105.40,33,17
+9,Krzysztof Wozniak,115.60,48,12
+10,Agnieszka Dabrowska,92.30,25,10
+11,Pawel Kozlowski,9999.00,36,3
+12,Monika Jankowska,140.20,30,14
+13,Lukasz Mazur,88.50,44,11
+14,Barbara Krawczyk,-50.00,29,16
+15,Adam Piotrowski,125.90,39,15
+16,Joanna Grabowska,101.10,31,10
+17,Michal Pawlak,118.75,46,13
+18,Aleksandra Michalska,97.40,28,9
+19,Grzegorz Krol,133.20,50,17
+20,Natalia Wieczorek,108.60,35,12
+21,Rafal Zajac,145.00,42,14
+22,Ewelina Kwiatkowska,90.15,26,11
+23,Dariusz Wrobel,999,999,23
+24,Sylwia Kaczmarek,112.30,37,15
+25,Marcin Piatek,127.80,40,16
