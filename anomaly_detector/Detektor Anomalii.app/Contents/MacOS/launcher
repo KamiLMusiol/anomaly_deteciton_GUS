@@ -1,0 +1,3 @@
+#!/bin/bash
+cd "/Users/kamil/Documents/GUS/anomalie/anomaly_deteciton_GUS/anomaly_detector"
+exec "/Users/kamil/Documents/GUS/anomalie/anomaly_deteciton_GUS/anomaly_detector/venv/bin/python3" desktop.py
