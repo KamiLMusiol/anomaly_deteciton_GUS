@@ -409,13 +409,47 @@ st.session_state.setdefault("historia_pytan", [])
 # ---------------------------------------------------------------- sidebar
 
 st.sidebar.title("Detekcja anomalii")
-uploaded = st.sidebar.file_uploader("Wgraj plik CSV", type=["csv"])
+uploaded = st.sidebar.file_uploader("Wgraj plik CSV lub Excel", type=["csv", "xlsx", "xls"])
 
 if uploaded is not None:
-    sep = st.sidebar.selectbox("Separator", [",", ";", "\t", "|"], index=0)
+    excel = uploaded.name.lower().endswith((".xlsx", ".xls"))
+
+    if excel:
+        # Z pliku Excel bierzemy TYLKO PIERWSZY arkusz. Kolejne sa ignorowane -
+        # zwykle sa to zestawienia pomocnicze o innej strukturze, ktorych nie da sie
+        # analizowac razem z pierwszym.
+        try:
+            arkusze = pd.ExcelFile(uploaded).sheet_names
+            st.sidebar.caption(f"Arkusz: {arkusze[0]}")
+            if len(arkusze) > 1:
+                pominiete = ", ".join(map(str, arkusze[1:]))
+                st.sidebar.info(f"Plik ma {len(arkusze)} arkuszy. Wczytany zostanie tylko "
+                                f"pierwszy ('{arkusze[0]}'). Pominiete: {pominiete}.")
+        except Exception as e:
+            st.sidebar.error(f"Nie udalo sie odczytac arkuszy: {e}")
+
+        wiersz_naglowka = st.sidebar.number_input(
+            "Wiersz z naglowkami", min_value=1, value=1, step=1,
+            help="Numer wiersza z nazwami kolumn. Ustaw wiecej niz 1, jesli arkusz "
+                 "zaczyna sie tytulem lub pustymi wierszami.",
+        )
+        sep = None
+    else:
+        sep = st.sidebar.selectbox("Separator", [",", ";", "\t", "|"], index=0)
+        wiersz_naglowka = 1
+
     if st.sidebar.button("Wczytaj plik", type="primary", width="stretch"):
         try:
-            st.session_state.raw_df = pd.read_csv(uploaded, sep=sep)
+            if excel:
+                st.session_state.raw_df = pd.read_excel(
+                    uploaded, sheet_name=0, header=int(wiersz_naglowka) - 1)
+            else:
+                st.session_state.raw_df = pd.read_csv(uploaded, sep=sep)
+
+            # kolumny bez nazwy (puste naglowki w Excelu) tylko przeszkadzaja
+            st.session_state.raw_df = st.session_state.raw_df.loc[
+                :, ~st.session_state.raw_df.columns.astype(str).str.startswith("Unnamed:")]
+
             st.session_state.result_df = None
             st.session_state.report = None
             st.sidebar.success(f"Wczytano {len(st.session_state.raw_df)} wierszy")

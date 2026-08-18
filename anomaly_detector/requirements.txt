@@ -5,5 +5,4 @@ plotly
 streamlit
 requests
 pywebview
-pillow
-pyinstaller
+openpyxl

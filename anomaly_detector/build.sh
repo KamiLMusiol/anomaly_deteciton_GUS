@@ -35,6 +35,7 @@ pyinstaller --noconfirm --clean --windowed --name "$NAZWA" \
   --collect-all plotly \
   --collect-all sklearn \
   --collect-all scipy \
+  --collect-all openpyxl \
   --collect-data pandas \
   --copy-metadata streamlit \
   --copy-metadata pandas \
@@ -44,6 +45,7 @@ pyinstaller --noconfirm --clean --windowed --name "$NAZWA" \
   --copy-metadata requests \
   --copy-metadata pyarrow \
   --copy-metadata altair \
+  --copy-metadata openpyxl \
   --hidden-import streamlit.web.bootstrap \
   --hidden-import streamlit.runtime.scriptrunner.magic_funcs \
   --hidden-import sklearn.utils._typedefs \
