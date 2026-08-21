@@ -16,9 +16,11 @@ set IKONA=
 if exist grafika\icon.ico set IKONA=--icon grafika\icon.ico
 if exist icon.ico set IKONA=--icon icon.ico
 
-echo == budowanie ==
+echo == budowanie (jeden plik .exe, w pelni przenosny) ==
 REM UWAGA: na Windowsie separator w --add-data to srednik, nie dwukropek
-pyinstaller --noconfirm --clean --windowed --name %NAZWA% ^
+REM --onefile pakuje wszystko (kod, biblioteki, DLL-ki) w jeden plik.
+REM Dzieki temu mozna go przeniesc na inny komputer bez folderu _internal.
+pyinstaller --noconfirm --clean --onefile --windowed --name %NAZWA% ^
   %IKONA% ^
   --add-data "app.py;." ^
   --add-data "anomaly_d.py;." ^
@@ -47,7 +49,8 @@ pyinstaller --noconfirm --clean --windowed --name %NAZWA% ^
 
 echo.
 echo == gotowe ==
-echo Aplikacja: dist\%NAZWA%\%NAZWA%.exe
+echo Aplikacja: dist\%NAZWA%.exe
+echo (jeden plik - mozna go kopiowac/przenosic bez zadnych dodatkowych folderow)
 echo.
 echo Jesli nie startuje, zbuduj bez --windowed i uruchom z wiersza polecen,
 echo zeby zobaczyc blad.
