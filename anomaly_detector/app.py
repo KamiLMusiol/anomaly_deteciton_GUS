@@ -434,10 +434,11 @@ if uploaded is not None:
                  "zaczyna sie tytulem lub pustymi wierszami.",
         )
         sep = None
+        kodowanie = st.sidebar.text_input("Kodowanie", value="utf-8")
     else:
         sep = st.sidebar.selectbox("Separator", [",", ";", "\t", "|"], index=0)
-        kodowanie = st.sidebar.text_input("Kodowanie", value="utf-8")
         wiersz_naglowka = 1
+        kodowanie = st.sidebar.text_input("Kodowanie", value="utf-8")
 
     if st.sidebar.button("Wczytaj plik", type="primary", width="stretch"):
         try:
