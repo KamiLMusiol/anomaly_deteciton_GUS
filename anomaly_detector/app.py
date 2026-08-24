@@ -436,6 +436,7 @@ if uploaded is not None:
         sep = None
     else:
         sep = st.sidebar.selectbox("Separator", [",", ";", "\t", "|"], index=0)
+        kodowanie = st.sidebar.text_input("Kodowanie", value="utf-8")
         wiersz_naglowka = 1
 
     if st.sidebar.button("Wczytaj plik", type="primary", width="stretch"):
@@ -444,7 +445,7 @@ if uploaded is not None:
                 st.session_state.raw_df = pd.read_excel(
                     uploaded, sheet_name=0, header=int(wiersz_naglowka) - 1)
             else:
-                st.session_state.raw_df = pd.read_csv(uploaded, sep=sep)
+                st.session_state.raw_df = pd.read_csv(uploaded, sep=sep, encoding=kodowanie)
 
             # kolumny bez nazwy (puste naglowki w Excelu) tylko przeszkadzaja
             st.session_state.raw_df = st.session_state.raw_df.loc[

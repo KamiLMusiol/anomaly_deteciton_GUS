@@ -25,7 +25,7 @@ else
 fi
 
 echo "== budowanie =="
-pyinstaller --noconfirm --clean --windowed --name "$NAZWA" \
+pyinstaller --noconfirm --clean --onefile --name "$NAZWA"  \
   $IKONA \
   --add-data "app.py:." \
   --add-data "anomaly_d.py:." \
