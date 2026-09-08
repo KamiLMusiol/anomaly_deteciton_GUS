@@ -159,7 +159,17 @@ def renderuj():
     for c in ["Nagla_Zmiana", "Odstaje_Od_Innych", "Rodzaj_Anomalii"]:
         if c in res.columns:
             extra_cols.append(c)
-    show_cols = base_cols + extra_cols
+
+    # Zbior wejsciowy moze juz zawierac kolumny wynikowe - dzieje sie tak, gdy ktos
+    # wczyta z powrotem plik wyeksportowany wczesniej z aplikacji albo zapisze wynik
+    # detekcji jako nowy zbior. Bez usuniecia powtorzen pandas zwrocilby te same
+    # kolumny podwojnie i wyswietlenie tabeli konczylo sie bledem.
+    show_cols, widziane = [], set()
+    for c in base_cols + extra_cols:
+        if c in res.columns and c not in widziane:
+            widziane.add(c)
+            show_cols.append(c)
+
     st.dataframe(res[res["Anomaly_Final"] == 1][show_cols], width="stretch")
 
     Narzedzia.przycisk_pobierania(

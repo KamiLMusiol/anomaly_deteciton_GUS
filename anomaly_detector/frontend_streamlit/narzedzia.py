@@ -71,58 +71,66 @@ class Narzedzia:
             return False, f"{type(e).__name__}: {e}"
 
     @staticmethod
-    def wybierz_folder():
+    def okno_zapisu(nazwa_domyslna):
         """
-        Natywne okno wyboru folderu. Zwraca (sciezka, komunikat_bledu).
+        Natywne okno "Zapisz jako" - uzytkownik wskazuje folder I nazwe pliku naraz.
+        Zwraca (pelna_sciezka, komunikat_bledu). Anulowanie daje (None, None).
 
         Dialog uruchamiany jest jako OSOBNY PROCES, ktory ma wlasny watek glowny.
-        To omija problem, przez ktory tkinter wywolany prosto z kodu aplikacji
-        zawiesza sie na macOS - tam okna systemowe musza powstawac na watku
-        glownym, a ten jest zajety przez okno aplikacji.
+        To omija problem, przez ktory okno systemowe wywolane prosto z kodu aplikacji
+        zawiesza sie na macOS - tam okna musza powstawac na watku glownym, a ten jest
+        zajety przez okno aplikacji.
 
-        Uzywamy narzedzi wbudowanych w system, wiec nie ma dodatkowych zaleznosci:
+        Korzystamy z narzedzi wbudowanych w system, bez dodatkowych zaleznosci:
         osascript na macOS, PowerShell na Windows, zenity albo kdialog na Linuksie.
         """
         try:
             if sys.platform == "darwin":
                 skrypt = (
                     'tell application "System Events" to activate\n'
-                    'set wybrany to choose folder with prompt "Wybierz folder do zapisu"\n'
-                    'POSIX path of wybrany'
+                    f'set plik to choose file name with prompt "Zapisz plik" '
+                    f'default name "{nazwa_domyslna}"\n'
+                    'POSIX path of plik'
                 )
                 r = subprocess.run(["osascript", "-e", skrypt],
-                                   capture_output=True, text=True, timeout=180)
+                                   capture_output=True, text=True, timeout=300)
                 if r.returncode != 0:
-                    # kod 1 to zwykle anulowanie przez uzytkownika, nie blad
-                    return None, None if "User canceled" in r.stderr else r.stderr.strip()
+                    # AppleScript zawsze zwraca kod -128 przy anulowaniu, niezaleznie
+                    # od jezyka systemu - szukanie tekstu bylo bledem, bo po polsku
+                    # brzmi to inaczej niz po angielsku
+                    if "(-128)" in r.stderr:
+                        return None, None
+                    return None, r.stderr.strip()
                 return r.stdout.strip(), None
 
             if sys.platform == "win32":
                 ps = (
                     "Add-Type -AssemblyName System.Windows.Forms; "
-                    "$d = New-Object System.Windows.Forms.FolderBrowserDialog; "
-                    "$d.Description = 'Wybierz folder do zapisu'; "
-                    "if ($d.ShowDialog() -eq 'OK') { Write-Output $d.SelectedPath }"
+                    "$d = New-Object System.Windows.Forms.SaveFileDialog; "
+                    f"$d.FileName = '{nazwa_domyslna}'; "
+                    "$d.Filter = 'Wszystkie pliki|*.*'; "
+                    "$d.OverwritePrompt = $true; "
+                    "if ($d.ShowDialog() -eq 'OK') { Write-Output $d.FileName }"
                 )
                 r = subprocess.run(["powershell", "-NoProfile", "-Command", ps],
-                                   capture_output=True, text=True, timeout=180)
+                                   capture_output=True, text=True, timeout=300)
                 sciezka = r.stdout.strip()
                 return (sciezka, None) if sciezka else (None, None)
 
-            # Linux - zenity albo kdialog, zaleznie od tego co jest
-            for polecenie in (["zenity", "--file-selection", "--directory",
-                               "--title=Wybierz folder do zapisu"],
-                              ["kdialog", "--getexistingdirectory", "."]):
+            # Linux - zenity albo kdialog, zaleznie od tego co jest zainstalowane
+            for polecenie in (["zenity", "--file-selection", "--save",
+                               "--confirm-overwrite", f"--filename={nazwa_domyslna}"],
+                              ["kdialog", "--getsavefilename", nazwa_domyslna]):
                 try:
-                    r = subprocess.run(polecenie, capture_output=True, text=True, timeout=180)
+                    r = subprocess.run(polecenie, capture_output=True, text=True, timeout=300)
                     sciezka = r.stdout.strip()
                     return (sciezka, None) if sciezka else (None, None)
                 except FileNotFoundError:
                     continue
-            return None, "Brak narzedzia do wyboru folderu (zainstaluj zenity albo kdialog)."
+            return None, "Brak narzedzia do wyboru pliku (zainstaluj zenity albo kdialog)."
 
         except subprocess.TimeoutExpired:
-            return None, "Okno wyboru folderu nie zostalo zamkniete w ciagu 3 minut."
+            return None, "Okno zapisu nie zostalo zamkniete w ciagu 5 minut."
         except Exception as e:
             return None, f"{type(e).__name__}: {e}"
 
@@ -149,19 +157,20 @@ class Narzedzia:
                                mime=mime, key=f"{key}_dl")
             return
 
-        # okno desktopowe - zapis bezposrednio na dysk
-        st.markdown(f"**{etykieta}**")
-
-        # okno desktopowe - jeden przycisk do wyboru folderu i zapisu
-        if st.button(f"{etykieta} (wybierz folder i zapisz)", key=f"{key}_btn", type="primary"):
-            sciezka, blad = Narzedzia.wybierz_folder()
+        # Okno desktopowe - jeden przycisk: wybor miejsca i zapis w jednym kroku.
+        # Uzytkownik wskazuje folder oraz nazwe pliku w natywnym oknie systemowym,
+        # a plik zapisuje sie od razu po zatwierdzeniu.
+        if st.button(etykieta, key=f"{key}_btn", type="primary"):
+            sciezka, blad = Narzedzia.okno_zapisu(nazwa_pliku)
 
             if blad:
                 st.error(blad)
             elif sciezka:
-                ok, info = Narzedzia.zapisz_plik(dane, nazwa_pliku, sciezka)
+                katalog = os.path.dirname(sciezka)
+                plik = os.path.basename(sciezka)
+                ok, info = Narzedzia.zapisz_plik(dane, plik, katalog)
                 if ok:
                     st.success(f"Zapisano: {info}")
                 else:
                     st.error(info)
-
+            # sciezka pusta i brak bledu = uzytkownik anulowal, nie robimy nic
