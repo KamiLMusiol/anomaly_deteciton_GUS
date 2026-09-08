@@ -1,19 +1,24 @@
 #!/bin/bash
 # Generuje ikony aplikacji z jednego pliku PNG.
-# Uzycie:  bash make_icons.sh grafika/logo.png
 #
-# Tworzy:
-#   grafika/icon.icns  - macOS (.app)
-#   grafika/icon.ico   - Windows (.exe)
-#   icon.png           - kopia dla make_app.sh
+# Uzycie (z dowolnego miejsca):
+#    bash pyinstaller_system_exe_binary/make_icons.sh
+#    bash pyinstaller_system_exe_binary/make_icons.sh sciezka/do/logo.png
+#
+# Domyslnie szuka grafika/logo.png w katalogu projektu.
+# Tworzy: grafika/icon.icns (macOS) oraz grafika/icon.ico (Windows)
 
 set -e
+
+KATALOG_SKRYPTU="$(cd "$(dirname "$0")" && pwd)"
+KATALOG_PROJEKTU="$(dirname "$KATALOG_SKRYPTU")"
+cd "$KATALOG_PROJEKTU"
 
 ZRODLO="${1:-grafika/logo.png}"
 
 if [ ! -f "$ZRODLO" ]; then
     echo "Nie znaleziono pliku: $ZRODLO"
-    echo "Uzycie: bash make_icons.sh sciezka/do/logo.png"
+    echo "Wrzuc logo do grafika/logo.png albo podaj sciezke jako argument."
     echo "Najlepiej PNG 1024x1024 z przezroczystym tlem."
     exit 1
 fi
@@ -22,7 +27,7 @@ mkdir -p grafika
 
 # --- macOS .icns ---
 if command -v iconutil > /dev/null 2>&1; then
-    echo "== generuje icon.icns (macOS) =="
+    echo "== generuje grafika/icon.icns (macOS) =="
     ICONSET="icon.iconset"
     rm -rf "$ICONSET"; mkdir "$ICONSET"
     for R in 16 32 128 256 512; do
@@ -38,27 +43,20 @@ else
 fi
 
 # --- Windows .ico ---
-echo "== generuje icon.ico (Windows) =="
+echo "== generuje grafika/icon.ico (Windows) =="
 python3 - "$ZRODLO" << 'PYEOF'
 import sys
 try:
     from PIL import Image
 except ImportError:
-    print("   Pillow niezainstalowane - pomijam .ico")
-    print("   pip install pillow, a potem uruchom skrypt ponownie")
+    print("   Pillow niezainstalowane - pomijam .ico  (pip install pillow)")
     sys.exit(0)
-
 img = Image.open(sys.argv[1]).convert("RGBA")
-rozmiary = [(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)]
-img.save("grafika/icon.ico", format="ICO", sizes=rozmiary)
+img.save("grafika/icon.ico", format="ICO",
+         sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
 print("   grafika/icon.ico")
 PYEOF
 
-# --- kopia dla make_app.sh (szuka icon.png w katalogu glownym) ---
-cp "$ZRODLO" icon.png
-echo "   icon.png (dla make_app.sh)"
-
 echo
 echo "Gotowe. Teraz zbuduj aplikacje:"
-echo "   bash build.sh      # samodzielna binarka"
-echo "   bash make_app.sh   # lekki bundle wskazujacy na projekt"
+echo "   bash pyinstaller_system_exe_binary/build.sh"

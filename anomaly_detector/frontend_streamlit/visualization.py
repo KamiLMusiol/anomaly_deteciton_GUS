@@ -1,12 +1,13 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-
+"""wykresy nie z plottib motem TODO zmien na seaborna jak bedziesz mial czas ale na razie nie uzywane
+"""
 
 class anomaly_visualizer:
 
     @staticmethod
     def plot_rolling(df: pd.DataFrame, col: str, save_path: str = None):
-        """Wartosc kolumny na tle sredniej kroczacej, z zaznaczonymi anomaliami (Anomaly_Final)."""
+        """srednia korczaca do testow"""
         fig, ax = plt.subplots(figsize=(12, 5))
 
         ax.plot(df.index, df[col], label=col, color="steelblue")

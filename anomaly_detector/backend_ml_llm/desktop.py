@@ -30,8 +30,16 @@ def czekaj_na_serwer(url, timeout=120):
 
 
 def katalog_aplikacji():
-    """W wersji spakowanej pliki leza w katalogu tymczasowym _MEIPASS."""
-    return getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    """Katalog, w ktorym lezy app.py wraz z folderami frontend_streamlit,
+    backend_ml_llm i .streamlit.
+
+    W wersji spakowanej wszystko laduje w katalogu tymczasowym _MEIPASS.
+    W wersji zwyklej ten plik siedzi w backend_ml_llm/, wiec app.py jest
+    o jeden poziom WYZEJ - stad dirname(dirname(...)).
+    """
+    if getattr(sys, "_MEIPASS", None):
+        return sys._MEIPASS
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def start_streamlit_w_procesie(app_path, port):
@@ -42,6 +50,12 @@ def start_streamlit_w_procesie(app_path, port):
     wewnatrz tego samego procesu.
     """
     import signal
+
+    # Znacznik dla aplikacji: dzialamy w oknie desktopowym, a nie w przegladarce.
+    # Wbudowana przegladarka nie obsluguje pobierania plikow - klikniecie przycisku
+    # pobierania przekierowuje okno pod adres z danymi i aplikacja znika z ekranu.
+    # Po tym znaczniku interfejs wie, ze ma pokazac zapis na dysk zamiast pobierania.
+    os.environ["DETEKTOR_DESKTOP"] = "1"
 
     import streamlit.web.bootstrap as bootstrap
     from streamlit import config as st_config
@@ -69,6 +83,8 @@ def start_streamlit_w_procesie(app_path, port):
 
 def start_streamlit_podprocesem(app_path, port):
     """Tryb zwykly - Streamlit jako osobny proces."""
+    # ten sam znacznik co wyzej, tyle ze przekazany do procesu potomnego
+    srodowisko = dict(os.environ, DETEKTOR_DESKTOP="1")
     return subprocess.Popen(
         [
             sys.executable, "-m", "streamlit", "run", app_path,
@@ -78,6 +94,7 @@ def start_streamlit_podprocesem(app_path, port):
             "--server.fileWatcherType", "none",
             "--global.developmentMode", "false",
         ],
+        env=srodowisko,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )

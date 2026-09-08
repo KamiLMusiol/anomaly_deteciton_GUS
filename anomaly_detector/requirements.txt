@@ -6,3 +6,4 @@ streamlit
 requests
 pywebview
 openpyxl
+duckdb

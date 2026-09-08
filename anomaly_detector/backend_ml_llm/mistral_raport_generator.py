@@ -4,6 +4,7 @@ import pandas as pd
 
 class report_generator:
 
+    #nie koniecznie mistral
     @staticmethod
     def ask_mistral(prompt: str, model: str = "mistral", timeout: int = 600) -> str:
         response = requests.post(
@@ -26,10 +27,10 @@ class report_generator:
         lines = []
 
         for idx, row in anomalies_df.iterrows():
-            zscore_cols = {c: row[f'{c}_zscore'] for c in num_cols if f'{c}_zscore' in row}
+            zscore_cols = {c: row[f'{c}_zscore'] for c in num_cols if f'{c}_zscore' in row} #z kazdego wiersz bierze kolumne i z score jej
             if not zscore_cols:
                 continue
-            main_col = max(zscore_cols, key=lambda c: abs(zscore_cols[c]))
+            main_col = max(zscore_cols, key=lambda c: abs(zscore_cols[c])) #znajduje najwiezkysz z score glowna przyczyne anomalii
             main_zscore = zscore_cols[main_col]
             main_diff_roll = row.get(f'{main_col}_diff_from_rolling_mean', 0)
             main_is_outlier = row.get(f'{main_col}_is_outlier', 0)
@@ -157,7 +158,7 @@ class report_generator:
             "na pytania o konkretny zbior danych.\n\n"
             "ZASADY:\n"
             "- Opieraj sie WYLACZNIE na podanych nizej faktach. Wszystkie liczby sa juz "
-            "policzone - nie licz nic sam i nie zmieniaj podanych wartosci.\n"
+            "policzone - nie licz nic sacdm i nie zmieniaj podanych wartosci.\n"
             "- Jesli odpowiedzi nie da sie ustalic z podanych informacji, napisz wprost, "
             "ze tych danych tu nie ma. Nie zgaduj.\n"
             "- Odpowiadaj krotko i rzeczowo.\n\n"
