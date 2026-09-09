@@ -71,6 +71,22 @@ class Narzedzia:
             return False, f"{type(e).__name__}: {e}"
 
     @staticmethod
+    def _bez_okna_konsoli():
+        """
+        Dodatkowe argumenty dla subprocess, zeby na Windowsie nie mignelo czarne
+        okno konsoli przy uruchamianiu PowerShella. Na pozostalych systemach
+        zwraca pusty slownik - tam problem nie wystepuje.
+        """
+        if sys.platform != "win32":
+            return {}
+        # CREATE_NO_WINDOW dziala od Pythona 3.7; STARTUPINFO to zabezpieczenie
+        # na wypadek, gdyby sama flaga nie wystarczyla w danym srodowisku
+        info = subprocess.STARTUPINFO()
+        info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        info.wShowWindow = subprocess.SW_HIDE
+        return {"creationflags": subprocess.CREATE_NO_WINDOW, "startupinfo": info}
+
+    @staticmethod
     def okno_zapisu(nazwa_domyslna):
         """
         Natywne okno "Zapisz jako" - uzytkownik wskazuje folder I nazwe pliku naraz.
@@ -113,7 +129,8 @@ class Narzedzia:
                     "if ($d.ShowDialog() -eq 'OK') { Write-Output $d.FileName }"
                 )
                 r = subprocess.run(["powershell", "-NoProfile", "-Command", ps],
-                                   capture_output=True, text=True, timeout=300)
+                                   capture_output=True, text=True, timeout=300,
+                                   **Narzedzia._bez_okna_konsoli())
                 sciezka = r.stdout.strip()
                 return (sciezka, None) if sciezka else (None, None)
 
